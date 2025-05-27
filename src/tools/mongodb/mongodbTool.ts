@@ -80,11 +80,6 @@ export abstract class MongoDBToolBase extends ToolBase {
     ): TelemetryToolMetadata {
         const metadata: TelemetryToolMetadata = {};
 
-        // Add projectId to the metadata if running a MongoDB operation to an Atlas cluster
-        if (this.session.connectedAtlasCluster?.projectId) {
-            metadata.projectId = this.session.connectedAtlasCluster.projectId;
-        }
-
         return metadata;
     }
 }

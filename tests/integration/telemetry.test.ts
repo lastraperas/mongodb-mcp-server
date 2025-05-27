@@ -11,9 +11,7 @@ describe("Telemetry", () => {
         const actualHashedId = createHmac("sha256", actualId.toUpperCase()).update("atlascli").digest("hex");
 
         const telemetry = Telemetry.create(
-            new Session({
-                apiBaseUrl: "",
-            }),
+            new Session(),
             config
         );
 

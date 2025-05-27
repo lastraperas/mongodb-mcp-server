@@ -9,10 +9,7 @@ const MockNodeDriverServiceProvider = NodeDriverServiceProvider as jest.MockedCl
 describe("Session", () => {
     let session: Session;
     beforeEach(() => {
-        session = new Session({
-            apiClientId: "test-client-id",
-            apiBaseUrl: "https://api.test.com",
-        });
+        session = new Session();
 
         MockNodeDriverServiceProvider.connect = jest.fn(() =>
             Promise.resolve({} as unknown as NodeDriverServiceProvider)

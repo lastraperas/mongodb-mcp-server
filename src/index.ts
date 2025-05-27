@@ -10,11 +10,7 @@ import { Telemetry } from "./telemetry/telemetry.js";
 import { createEJsonTransport } from "./helpers/EJsonTransport.js";
 
 try {
-    const session = new Session({
-        apiBaseUrl: config.apiBaseUrl,
-        apiClientId: config.apiClientId,
-        apiClientSecret: config.apiClientSecret,
-    });
+    const session = new Session();
     const mcpServer = new McpServer({
         name: packageInfo.mcpServerName,
         version: packageInfo.version,

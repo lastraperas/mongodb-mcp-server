@@ -1,7 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { Session } from "./session.js";
 import { Transport } from "@modelcontextprotocol/sdk/shared/transport.js";
-import { AtlasTools } from "./tools/atlas/tools.js";
 import { MongoDbTools } from "./tools/mongodb/tools.js";
 import logger, { initializeLogger, LogId } from "./logger.js";
 import { ObjectId } from "mongodb";
@@ -134,7 +133,7 @@ export class Server {
     }
 
     private registerTools() {
-        for (const tool of [...AtlasTools, ...MongoDbTools]) {
+        for (const tool of MongoDbTools) {
             new tool(this.session, this.userConfig, this.telemetry).register(this.mcpServer);
         }
     }
@@ -153,12 +152,8 @@ export class Server {
                     logPath: this.userConfig.logPath,
                     connectionString: this.userConfig.connectionString
                         ? "set; access to MongoDB tools are currently available to use"
-                        : "not set; before using any MongoDB tool, you need to configure a connection string, alternatively you can setup MongoDB Atlas access, more info at 'https://github.com/mongodb-js/mongodb-mcp-server'.",
+                        : "not set; before using any MongoDB tool, you need to configure a connection string, more info at 'https://github.com/mongodb-js/mongodb-mcp-server'.",
                     connectOptions: this.userConfig.connectOptions,
-                    atlas:
-                        this.userConfig.apiClientId && this.userConfig.apiClientSecret
-                            ? "set; MongoDB Atlas tools are currently available to use"
-                            : "not set; MongoDB Atlas tools are currently unavailable, to have access to MongoDB Atlas tools like creating clusters or connecting to clusters make sure to setup credentials, more info at 'https://github.com/mongodb-js/mongodb-mcp-server'.",
                 };
                 return {
                     contents: [
@@ -183,23 +178,6 @@ export class Server {
                     error
                 );
                 throw new Error("Failed to connect to MongoDB instance using the connection string from the config");
-            }
-        }
-
-        if (this.userConfig.apiClientId && this.userConfig.apiClientSecret) {
-            try {
-                await this.session.apiClient.validateAccessToken();
-            } catch (error) {
-                if (this.userConfig.connectionString === undefined) {
-                    console.error("Failed to validate MongoDB Atlas the credentials from the config: ", error);
-
-                    throw new Error(
-                        "Failed to connect to MongoDB Atlas instance using the credentials from the config"
-                    );
-                }
-                console.error(
-                    "Failed to validate MongoDB Atlas the credentials from the config, but validated the connection string."
-                );
             }
         }
     }

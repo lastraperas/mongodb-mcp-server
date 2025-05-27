@@ -1,5 +1,4 @@
 import { NodeDriverServiceProvider } from "@mongosh/service-provider-node-driver";
-import { ApiClient, ApiClientCredentials } from "./common/atlas/apiClient.js";
 import { Implementation } from "@modelcontextprotocol/sdk/types.js";
 import logger, { LogId } from "./logger.js";
 import EventEmitter from "events";
@@ -7,45 +6,19 @@ import { ConnectOptions } from "./config.js";
 import { setAppNameParamIfMissing } from "./helpers/connectionOptions.js";
 import { packageInfo } from "./helpers/packageInfo.js";
 
-export interface SessionOptions {
-    apiBaseUrl: string;
-    apiClientId?: string;
-    apiClientSecret?: string;
-}
-
 export class Session extends EventEmitter<{
     close: [];
     disconnect: [];
 }> {
     sessionId?: string;
     serviceProvider?: NodeDriverServiceProvider;
-    apiClient: ApiClient;
     agentRunner?: {
         name: string;
         version: string;
     };
-    connectedAtlasCluster?: {
-        username: string;
-        projectId: string;
-        clusterName: string;
-        expiryDate: Date;
-    };
 
-    constructor({ apiBaseUrl, apiClientId, apiClientSecret }: SessionOptions) {
+    constructor() {
         super();
-
-        const credentials: ApiClientCredentials | undefined =
-            apiClientId && apiClientSecret
-                ? {
-                      clientId: apiClientId,
-                      clientSecret: apiClientSecret,
-                  }
-                : undefined;
-
-        this.apiClient = new ApiClient({
-            baseUrl: apiBaseUrl,
-            credentials,
-        });
     }
 
     setAgentRunner(agentRunner: Implementation | undefined) {
@@ -67,30 +40,6 @@ export class Session extends EventEmitter<{
             }
             this.serviceProvider = undefined;
         }
-        if (!this.connectedAtlasCluster) {
-            this.emit("disconnect");
-            return;
-        }
-        void this.apiClient
-            .deleteDatabaseUser({
-                params: {
-                    path: {
-                        groupId: this.connectedAtlasCluster.projectId,
-                        username: this.connectedAtlasCluster.username,
-                        databaseName: "admin",
-                    },
-                },
-            })
-            .catch((err: unknown) => {
-                const error = err instanceof Error ? err : new Error(String(err));
-                logger.error(
-                    LogId.atlasDeleteDatabaseUserFailure,
-                    "atlas-connect-cluster",
-                    `Error deleting previous database user: ${error.message}`
-                );
-            });
-        this.connectedAtlasCluster = undefined;
-
         this.emit("disconnect");
     }
 

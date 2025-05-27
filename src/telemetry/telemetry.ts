@@ -2,7 +2,6 @@ import { Session } from "../session.js";
 import { BaseEvent, CommonProperties } from "./types.js";
 import { UserConfig } from "../config.js";
 import logger, { LogId } from "../logger.js";
-import { ApiClient } from "../common/atlas/apiClient.js";
 import { MACHINE_METADATA } from "./constants.js";
 import { EventCache } from "./eventCache.js";
 import nodeMachineId from "node-machine-id";
@@ -112,7 +111,7 @@ export class Telemetry {
             mcp_client_version: this.session.agentRunner?.version,
             mcp_client_name: this.session.agentRunner?.name,
             session_id: this.session.sessionId,
-            config_atlas_auth: this.session.apiClient.hasCredentials() ? "true" : "false",
+            config_atlas_auth: "false",
             config_connection_string: this.userConfig.connectionString ? "true" : "false",
         };
     }
@@ -153,42 +152,12 @@ export class Telemetry {
             `Attempting to send ${allEvents.length} events (${cachedEvents.length} cached)`
         );
 
-        const result = await this.sendEvents(this.session.apiClient, allEvents);
-        if (result.success) {
-            this.eventCache.clearEvents();
-            logger.debug(
-                LogId.telemetryEmitSuccess,
-                "telemetry",
-                `Sent ${allEvents.length} events successfully: ${JSON.stringify(allEvents, null, 2)}`
-            );
-            return;
-        }
-
+        // Atlas API client is no longer available, so we just cache events locally
         logger.debug(
-            LogId.telemetryEmitFailure,
+            LogId.telemetryEmitSuccess,
             "telemetry",
-            `Error sending event to client: ${result.error instanceof Error ? result.error.message : String(result.error)}`
+            `Cached ${allEvents.length} events locally: ${JSON.stringify(allEvents, null, 2)}`
         );
         this.eventCache.appendEvents(events);
-    }
-
-    /**
-     * Attempts to send events through the provided API client
-     */
-    private async sendEvents(client: ApiClient, events: BaseEvent[]): Promise<EventResult> {
-        try {
-            await client.sendEvents(
-                events.map((event) => ({
-                    ...event,
-                    properties: { ...this.getCommonProperties(), ...event.properties },
-                }))
-            );
-            return { success: true };
-        } catch (error) {
-            return {
-                success: false,
-                error: error instanceof Error ? error : new Error(String(error)),
-            };
-        }
     }
 }

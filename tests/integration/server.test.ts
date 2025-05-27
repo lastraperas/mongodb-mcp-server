@@ -3,39 +3,15 @@ import { describeWithMongoDB } from "./tools/mongodb/mongodbHelpers.js";
 
 describe("Server integration test", () => {
     describeWithMongoDB(
-        "without atlas",
+        "mongodb tools",
         (integration) => {
-            it("should return positive number of tools and have no atlas tools", async () => {
+            it("should return positive number of tools and have only mongodb tools", async () => {
                 const tools = await integration.mcpClient().listTools();
                 expectDefined(tools);
                 expect(tools.tools.length).toBeGreaterThan(0);
 
                 const atlasTools = tools.tools.filter((tool) => tool.name.startsWith("atlas-"));
-                expect(atlasTools.length).toBeLessThanOrEqual(0);
-            });
-        },
-        () => ({
-            ...defaultTestConfig,
-            apiClientId: undefined,
-            apiClientSecret: undefined,
-        })
-    );
-
-    describe("with atlas", () => {
-        const integration = setupIntegrationTest(() => ({
-            ...defaultTestConfig,
-            apiClientId: "test",
-            apiClientSecret: "test",
-        }));
-
-        describe("list capabilities", () => {
-            it("should return positive number of tools and have some atlas tools", async () => {
-                const tools = await integration.mcpClient().listTools();
-                expectDefined(tools);
-                expect(tools.tools.length).toBeGreaterThan(0);
-
-                const atlasTools = tools.tools.filter((tool) => tool.name.startsWith("atlas-"));
-                expect(atlasTools.length).toBeGreaterThan(0);
+                expect(atlasTools.length).toBe(0);
             });
 
             it("should return no prompts", async () => {
@@ -53,15 +29,14 @@ describe("Server integration test", () => {
                 expectDefined(capabilities?.logging);
                 expect(capabilities?.prompts).toBeUndefined();
             });
-        });
-    });
+        },
+        () => defaultTestConfig
+    );
 
     describe("with read-only mode", () => {
         const integration = setupIntegrationTest(() => ({
             ...defaultTestConfig,
             readOnly: true,
-            apiClientId: "test",
-            apiClientSecret: "test",
         }));
 
         it("should only register read and metadata operation tools when read-only mode is enabled", async () => {
@@ -73,8 +48,6 @@ describe("Server integration test", () => {
             expect(tools.tools.some((tool) => tool.name === "find")).toBe(true);
             expect(tools.tools.some((tool) => tool.name === "collection-schema")).toBe(true);
             expect(tools.tools.some((tool) => tool.name === "list-databases")).toBe(true);
-            expect(tools.tools.some((tool) => tool.name === "atlas-list-orgs")).toBe(true);
-            expect(tools.tools.some((tool) => tool.name === "atlas-list-projects")).toBe(true);
 
             // Check that non-read tools are NOT available
             expect(tools.tools.some((tool) => tool.name === "insert-one")).toBe(false);

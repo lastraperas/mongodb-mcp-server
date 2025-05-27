@@ -66,6 +66,9 @@ export function setupMongoDBIntegrationTest(): MongoDBIntegrationTest {
         let dbsDir = path.join(tmpDir, "mongodb-runner", "dbs");
         for (let i = 0; i < 10; i++) {
             try {
+                // Force mongodb-runner to treat Pop OS as Ubuntu
+                process.env.DISTRO_ID = "Ubuntu";
+
                 mongoCluster = await MongoCluster.start({
                     tmpDir: dbsDir,
                     logDir: path.join(tmpDir, "mongodb-runner", "logs"),
