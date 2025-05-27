@@ -9,6 +9,14 @@ import { packageInfo } from "./helpers/packageInfo.js";
 import { Telemetry } from "./telemetry/telemetry.js";
 import { createEJsonTransport } from "./helpers/EJsonTransport.js";
 
+// Export modules for use as a library
+export { logger, LogId };
+export { config };
+export { Session };
+export { Server };
+export { Telemetry };
+export { createEJsonTransport };
+
 try {
     const session = new Session({
         apiBaseUrl: config.apiBaseUrl,
